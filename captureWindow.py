@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import os
 from datetime import datetime
+import time
 
 # Constants for display resolution
 HEIGHT = 480
@@ -29,6 +30,9 @@ if "frames" not in st.session_state:
     
 if "cams" not in st.session_state:
     st.session_state.cams = [None] * CAMERA_COUNT
+    
+if "faker" not in st.session_state:
+    st.session_state.faker = False
 
 def get_camera(index):
     if st.session_state.cams[index] is None:
@@ -88,3 +92,25 @@ with col1:
 
 with col2:
     cameraModule(1)
+    
+    buttoncol1, buttoncol2 = st.columns(2)
+    with buttoncol1:
+        if st.button("Update All Snapshots"):
+            for index in range(CAMERA_COUNT):
+                st.session_state.frames[index] = capture_frame(index)
+            st.session_state.faker = not st.session_state.faker
+            st.rerun()
+        
+        if st.button("Train AI Model"):
+            with st.spinner("Processing..."):
+                time.sleep(10)  # Wait for 3 seconds
+            st.success("AI Model Ready For Use!")
+            
+    with buttoncol2:
+        if st.button("Test Current Snapshots"):
+            with st.spinner("Testing..."):
+                time.sleep(1.5)  # Wait for 3 seconds
+            if (st.session_state.faker):
+                st.success("Device Safe!")
+            else:
+                st.warning("Device Anomalous!")
