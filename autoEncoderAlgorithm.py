@@ -23,19 +23,9 @@ train_dataset = image_dataset_from_directory(
     labels=None,  # Unsupervised, so no labels
     color_mode="grayscale",
     image_size=(IMG_HEIGHT, IMG_WIDTH),  # Resize images
-    batch_size=32,  # Batch size
-    shuffle=True  # Shuffle the dataset
 )
 
-# Normalize pixel values to [0, 1]
-def normalize_image(image):
-    return image / 255.0
-
-# Convert the dataset into a NumPy array (if required)
-X = tf.concat([x for x in train_dataset.map(normalize_image)], axis=0).numpy()
-
-print("yahoo")
-print(X.shape)
+train_dataset = train_dataset.map(lambda x: (x / 255.0))
 
 # --- Autoencoder Architecture ---
 def build_autoencoder(input_shape):
@@ -44,14 +34,14 @@ def build_autoencoder(input_shape):
     x = Conv2D(32, (3, 3), activation='relu', padding='same')(input_img)
     x = MaxPooling2D((2, 2), padding='same')(x)
     x = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
-    # x = MaxPooling2D((2, 2), padding='same')(x)
-    # x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = MaxPooling2D((2, 2), padding='same')(x)
+    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
     encoded = MaxPooling2D((2, 2), padding='same')(x)  # Latent space
 
     # Decoder
-    # x = Conv2D(128, (3, 3), activation='relu', padding='same')(encoded)
-    # x = UpSampling2D((2, 2))(x)
-    x = Conv2D(64, (3, 3), activation='relu', padding='same')(encoded)
+    x = Conv2D(128, (3, 3), activation='relu', padding='same')(encoded)
+    x = UpSampling2D((2, 2))(x)
+    x = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
     x = UpSampling2D((2, 2))(x)
     x = Conv2D(32, (3, 3), activation='relu', padding='same')(x)
     x = UpSampling2D((2, 2))(x)
@@ -66,9 +56,7 @@ autoencoder.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
 autoencoder.summary()
 
 history = autoencoder.fit(
-    X,
-    X,
-    batch_size=32,
+    train_dataset,
     epochs=10,
 )
 

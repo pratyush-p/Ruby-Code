@@ -17,7 +17,7 @@ CASE_SLICES = {
         "Front": lambda: [(80, 180), (520, 470)], # 440 x 290
 }
 
-CAMERA_COUNT = 3
+CAMERA_COUNT = 4
 
 for i in range(CAMERA_COUNT):
     os.makedirs(str(i) + "_Raw_Images", exist_ok=True)
@@ -31,8 +31,8 @@ if "frames" not in st.session_state:
 if "cams" not in st.session_state:
     st.session_state.cams = [None] * CAMERA_COUNT
     
-if "faker" not in st.session_state:
-    st.session_state.faker = False
+if "safeBool" not in st.session_state:
+    st.session_state.safeBool = False
 
 def get_camera(index):
     if st.session_state.cams[index] is None:
@@ -77,6 +77,7 @@ def cameraModule(index):
         x1, y1 = slice[0]
         x2, y2 = slice[1]
         save_image(capture_frame(index)[y1:y2, x1:x2], index)
+        st.success("Saved Image " + str(index))
     
     if angle: 
         st.session_state.frames[index] = capture_frame(index)
@@ -87,18 +88,18 @@ def cameraModule(index):
 # Create 2x2 grid layout
 col1, col2 = st.columns(2)
 with col1:
-    cameraModule(0)
-    cameraModule(2)
+    cameraModule(1)
+    cameraModule(3)
 
 with col2:
-    cameraModule(1)
+    cameraModule(2)
     
     buttoncol1, buttoncol2 = st.columns(2)
     with buttoncol1:
         if st.button("Update All Snapshots"):
             for index in range(CAMERA_COUNT):
                 st.session_state.frames[index] = capture_frame(index)
-            st.session_state.faker = not st.session_state.faker
+            st.session_state.safeBool = not st.session_state.safeBool
             st.rerun()
         
         if st.button("Train AI Model"):
@@ -110,7 +111,7 @@ with col2:
         if st.button("Test Current Snapshots"):
             with st.spinner("Testing..."):
                 time.sleep(1.5)  # Wait for 3 seconds
-            if (st.session_state.faker):
+            if (st.session_state.safeBool):
                 st.success("Device Safe!")
             else:
                 st.warning("Device Anomalous!")
